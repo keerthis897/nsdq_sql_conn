@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"database/sql"
 	"fmt"
 	"log"
@@ -25,16 +24,14 @@ func main() {
 	}
 	defer conn.Close()
 
-	ctx := context.Background() //It allows you to control the lifecycle of operations, including cancellation signals and timeouts.
-
-	err = conn.PingContext(ctx)
+	err = conn.Ping()
 	if err != nil {
 		log.Fatal("Error connecting to database: ", err.Error())
 	}
 
 	fmt.Println("Connected to SQL Server!")
 
-	_, err = conn.ExecContext(ctx, `
+	_, err = conn.Exec(`
 	IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[students]') AND type in (N'U'))
 	BEGIN
 		CREATE TABLE students (
@@ -46,7 +43,7 @@ func main() {
 		log.Fatal("Error creating table: ", err.Error())
 	}
 
-	result, err := conn.ExecContext(ctx, "INSERT INTO students (name) VALUES ('John6')")
+	result, err := conn.Exec("INSERT INTO students (name) VALUES ('John6')")
 	if err != nil {
 		log.Fatal("Error inserting data: ", err.Error())
 	}
@@ -57,7 +54,7 @@ func main() {
 	}
 	fmt.Printf("%d row(s) inserted.\n", rowsAffected)
 
-	result, err = conn.ExecContext(ctx, "DELETE FROM students WHERE Name = 'Johna'")
+	result, err = conn.Exec("DELETE FROM students WHERE Name = 'Johna'")
 	if err != nil {
 		log.Fatal("Error deleting data: ", err.Error())
 	}
@@ -68,7 +65,7 @@ func main() {
 	}
 	fmt.Printf("%d row(s) deleted.\n", rowsAffected)
 
-	result, err = conn.ExecContext(ctx, "UPDATE students SET Name = 'Johnny' WHERE Name = 'John'")
+	result, err = conn.Exec("UPDATE students SET Name = 'Johnny' WHERE Name = 'John'")
 	if err != nil {
 		log.Fatal("Error updating data: ", err.Error())
 	}
