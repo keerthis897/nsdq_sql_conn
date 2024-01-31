@@ -1,29 +1,23 @@
 package main
 
 import (
-	"context"
 	"fmt"
-	"log"
-	"nsdq_sql_conn/sqlserver"
+	"net/http"
+
+	initializers "nsdq_sql_conn/initializers/without_orm"
+	routes "nsdq_sql_conn/routes/without_orm"
 )
 
+func init() {
+	initializers.LoadEnvVariables()
+	initializers.ConnectDB()
+
+}
+
 func main() {
-	conn, err := sqlserver.NewDBConnection()
-	if err != nil {
-		log.Fatal("Error creating connection pool: ", err.Error())
-	}
-	defer conn.Close()
 
-	// Perform SQL operations
-	ctx := context.Background()
-	err = sqlserver.CreateTableIfNotExists(ctx, conn)
-	if err != nil {
-		log.Fatal("Error creating table: ", err.Error())
-	}
+	routes.SetupRoutes()
 
-	rowsAffected, err := sqlserver.InsertData(ctx, conn, "John4")
-	if err != nil {
-		log.Fatal("Error inserting data: ", err.Error())
-	}
-	fmt.Printf("%d row(s) inserted.\n", rowsAffected)
+	fmt.Println("Server listening on port 8080...")
+	http.ListenAndServe(":8080", nil)
 }
