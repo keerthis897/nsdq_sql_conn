@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"nsdq_sql_conn/models"
+
 	initializers "nsdq_sql_conn/initializers/without_orm"
 )
 
@@ -32,17 +34,12 @@ type Student struct {
 }
 
 func GetStudents(w http.ResponseWriter, r *http.Request) {
-	// Set response header
 	w.Header().Set("Content-Type", "application/json")
-
-	// Retrieve the database connection
 	db := initializers.GetDB()
 	if db == nil {
 		http.Error(w, "Db connection is nil", http.StatusInternalServerError)
 		return
 	}
-
-	// Query to retrieve students
 	rows, err := db.Query("SELECT ID, Name FROM students")
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Error querying database: %v", err), http.StatusInternalServerError)
@@ -50,12 +47,10 @@ func GetStudents(w http.ResponseWriter, r *http.Request) {
 	}
 	defer rows.Close()
 
-	// Slice to hold retrieved students
-	var students []Student
+	var students []models.Students
 
-	// Iterate over rows
 	for rows.Next() {
-		var student Student
+		var student models.Students
 		err := rows.Scan(&student.ID, &student.Name)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("Error scanning row: %v", err), http.StatusInternalServerError)
@@ -64,19 +59,57 @@ func GetStudents(w http.ResponseWriter, r *http.Request) {
 		students = append(students, student)
 	}
 
-	// Check for errors during iteration
 	if err := rows.Err(); err != nil {
 		http.Error(w, fmt.Sprintf("Error iterating over rows: %v", err), http.StatusInternalServerError)
 		return
 	}
 
-	// Encode students slice to JSON
 	err = json.NewEncoder(w).Encode(students)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Error encoding JSON: %v", err), http.StatusInternalServerError)
 		return
 	}
 }
+
+// func GetStudents(w http.ResponseWriter, r *http.Request) {
+// 	w.Header().Set("Content-Type", "application/json")
+
+// 	db := initializers.GetDB()
+// 	if db == nil {
+// 		http.Error(w, "Db connection is nil", http.StatusInternalServerError)
+// 		return
+// 	}
+
+// 	rows, err := db.Query("SELECT ID, Name FROM students")
+// 	if err != nil {
+// 		http.Error(w, fmt.Sprintf("Error querying database: %v", err), http.StatusInternalServerError)
+// 		return
+// 	}
+// 	defer rows.Close()
+
+// 	var students []Student
+
+// 	for rows.Next() {
+// 		var student Student
+// 		err := rows.Scan(&student.ID, &student.Name)
+// 		if err != nil {
+// 			http.Error(w, fmt.Sprintf("Error scanning row: %v", err), http.StatusInternalServerError)
+// 			return
+// 		}
+// 		students = append(students, student)
+// 	}
+
+// 	if err := rows.Err(); err != nil {
+// 		http.Error(w, fmt.Sprintf("Error iterating over rows: %v", err), http.StatusInternalServerError)
+// 		return
+// 	}
+
+// 	err = json.NewEncoder(w).Encode(students)
+// 	if err != nil {
+// 		http.Error(w, fmt.Sprintf("Error encoding JSON: %v", err), http.StatusInternalServerError)
+// 		return
+// 	}
+// }
 
 func CreateStudent(w http.ResponseWriter, r *http.Request) {
 	conn := initializers.GetDB()
